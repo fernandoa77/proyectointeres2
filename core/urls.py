@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from django.views.generic import TemplateView
 
 urlpatterns = [
     path('', views.home, name='home'),
@@ -12,4 +13,5 @@ urlpatterns = [
     path('table/<int:id>/', views.table_detail, name='table_detail'),
     path('fund/<int:id>/', views.fund_detail, name='fund_detail'),
     path('signup/', views.signup, name='signup'),
+    path('logout-confirmation/', TemplateView.as_view(template_name='confirmation.html'), name='logout_confirmation'),
 ]

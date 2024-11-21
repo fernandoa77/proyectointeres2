@@ -7,8 +7,9 @@ from decimal import Decimal
 import calendar
 from django.contrib.auth.decorators import login_required
 from .models import AmortizationTable, SinkingFund
-from django.contrib.auth import login
+from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm
+from django.contrib import messages
 
 def generate_amortization_schedule(amount, interest_rate, term, payment_frequency, start_date):
     schedule = []
@@ -216,15 +217,35 @@ def fund_detail(request, id):
     fund = get_object_or_404(SinkingFund, id=id, user=request.user)
     return render(request, 'fund_detail.html', {'fund': fund})
 
+class CustomUserCreationForm(UserCreationForm):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Traducir los mensajes de error
+        self.error_messages = {
+            'password_mismatch': 'Las contraseñas no coinciden.',
+            'password_too_short': 'La contraseña es demasiado corta.',
+            'password_too_common': 'La contraseña es demasiado común.',
+            'password_entirely_numeric': 'La contraseña no puede ser completamente numérica.',
+        }
+        # Traducir las etiquetas de los campos
+        self.fields['username'].label = 'Nombre de usuario'
+        self.fields['password1'].label = 'Contraseña'
+        self.fields['password2'].label = 'Confirmar contraseña'
+        # Traducir los mensajes de ayuda
+        self.fields['username'].help_text = 'Requerido. 150 caracteres o menos. Letras, números y @/./+/-/_ solamente.'
+        self.fields['password1'].help_text = 'Tu contraseña debe contener al menos 8 caracteres.'
+        self.fields['password2'].help_text = 'Ingresa la misma contraseña que antes, para verificación.'
+
 def signup(request):
     if request.method == 'POST':
-        form = UserCreationForm(request.POST)
+        form = CustomUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
+            messages.success(request, '¡Cuenta creada exitosamente! Bienvenido.')
             return redirect('home')
     else:
-        form = UserCreationForm()
+        form = CustomUserCreationForm()
     return render(request, 'registration/signup.html', {'form': form})
 
 def home(request):
@@ -247,3 +268,8 @@ def home(request):
         })
     
     return render(request, 'home.html', context)
+
+def logout_view(request):
+    logout(request)
+    messages.success(request, 'Has cerrado sesión exitosamente.')
+    return redirect('home')
