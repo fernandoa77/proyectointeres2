@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block title %}Resultado de Amortización{% endblock %}
+
+{% block content %}
+<h1>Resultado de Amortización</h1>
+<table>
+    <thead>
+        <tr>
+            <th>Mes</th>
+            <th>Fecha de Pago</th>
+            <th>Pago Mensual</th>
+            <th>Interés</th>
+            <th>Principal</th>
+            <th>Saldo Restante</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in schedule %}
+        <tr>
+            <td>{{ entry.month }}</td>
+            <td>{{ entry.payment_date }}</td>
+            <td>{{ entry.monthly_payment|floatformat:2 }}</td>
+            <td>{{ entry.interest|floatformat:2 }}</td>
+            <td>{{ entry.principal|floatformat:2 }}</td>
+            <td>{{ entry.remaining_balance|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+<a href="{% url 'amortization' %}">Volver</a>
+{% endblock %} 
