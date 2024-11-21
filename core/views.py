@@ -10,6 +10,8 @@ from .models import AmortizationTable, SinkingFund
 from django.contrib.auth import login, logout
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
+import json
+from datetime import date
 
 def generate_amortization_schedule(amount, interest_rate, term, payment_frequency, start_date):
     schedule = []
@@ -56,6 +58,7 @@ def generate_amortization_schedule(amount, interest_rate, term, payment_frequenc
 def amortization_view(request):
     form = AmortizationForm()
     schedule = None
+    table_data_json = None
     
     if request.method == 'POST':
         form = AmortizationForm(request.POST)
@@ -73,30 +76,40 @@ def amortization_view(request):
                 payment_frequency,
                 start_date
             )
-
-            if 'download' in request.POST:
-                df = pd.DataFrame(schedule)
-                df.columns = [
-                    'Período',
-                    'Fecha de Pago',
-                    f'Pago {"Quincenal" if payment_frequency == 24 else "Mensual" if payment_frequency == 12 else "Semestral" if payment_frequency == 2 else "Anual"}',
-                    'Interés',
-                    'Principal',
-                    'Saldo Restante'
+            
+            # Crear el diccionario de datos completo
+            table_data = {
+                'form_data': {
+                    'amount': str(amount),
+                    'interest_rate': str(interest_rate),
+                    'term': term,
+                    'payment_frequency': payment_frequency,
+                    'start_date': start_date.strftime('%Y-%m-%d'),
+                },
+                'schedule': [
+                    {
+                        'month': entry['month'],
+                        'payment_date': entry['payment_date'].strftime('%Y-%m-%d'),
+                        'monthly_payment': float(entry['monthly_payment']),
+                        'interest': float(entry['interest']),
+                        'principal': float(entry['principal']),
+                        'remaining_balance': float(entry['remaining_balance'])
+                    }
+                    for entry in schedule
                 ]
-                response = HttpResponse(content_type='application/vnd.ms-excel')
-                response['Content-Disposition'] = 'attachment; filename="tabla_amortizacion.xlsx"'
-                df.to_excel(response, index=False)
-                return response
+            }
+            table_data_json = json.dumps(table_data, cls=DateEncoder)
 
     return render(request, 'amortization.html', {
         'form': form,
-        'schedule': schedule
+        'schedule': schedule,
+        'table_data_json': table_data_json
     })
 
 def sinking_fund_view(request):
     form = SinkingFundForm()
     schedule = None
+    fund_data_json = None
     
     if request.method == 'POST':
         form = SinkingFundForm(request.POST)
@@ -114,24 +127,33 @@ def sinking_fund_view(request):
                 payment_frequency,
                 start_date
             )
-
-            if 'download' in request.POST:
-                df = pd.DataFrame(schedule)
-                df.columns = [
-                    'Período',
-                    'Fecha de Depósito',
-                    f'Depósito {"Quincenal" if payment_frequency == 24 else "Mensual" if payment_frequency == 12 else "Semestral" if payment_frequency == 2 else "Anual"}',
-                    'Interés',
-                    'Saldo Acumulado'
+            
+            # Crear el diccionario de datos completo
+            fund_data = {
+                'form_data': {
+                    'target_amount': str(target_amount),
+                    'interest_rate': str(interest_rate),
+                    'term': term,
+                    'payment_frequency': payment_frequency,
+                    'start_date': start_date.strftime('%Y-%m-%d'),
+                },
+                'schedule': [
+                    {
+                        'period': entry['period'],
+                        'payment_date': entry['payment_date'].strftime('%Y-%m-%d'),
+                        'deposit': float(entry['deposit']),
+                        'interest': float(entry['interest']),
+                        'balance': float(entry['balance'])
+                    }
+                    for entry in schedule
                 ]
-                response = HttpResponse(content_type='application/vnd.ms-excel')
-                response['Content-Disposition'] = 'attachment; filename="fondo_amortizacion.xlsx"'
-                df.to_excel(response, index=False)
-                return response
+            }
+            fund_data_json = json.dumps(fund_data, cls=DateEncoder)
 
     return render(request, 'sinking_fund.html', {
         'form': form,
-        'schedule': schedule
+        'schedule': schedule,
+        'fund_data_json': fund_data_json
     })
 
 def generate_sinking_fund_schedule(target_amount, interest_rate, term, payment_frequency, start_date):
@@ -194,16 +216,26 @@ def my_funds(request):
 @login_required
 def save_amortization(request):
     if request.method == 'POST':
-        data = request.POST.get('table_data')
-        AmortizationTable.objects.create(user=request.user, data=data)
+        table_data = request.POST.get('table_data')
+        if table_data:
+            AmortizationTable.objects.create(
+                user=request.user,
+                data=json.loads(table_data)
+            )
+            messages.success(request, 'Tabla guardada exitosamente.')
         return redirect('my_tables')
     return redirect('amortization')
 
 @login_required
 def save_fund(request):
     if request.method == 'POST':
-        data = request.POST.get('fund_data')
-        SinkingFund.objects.create(user=request.user, data=data)
+        fund_data = request.POST.get('fund_data')
+        if fund_data:
+            SinkingFund.objects.create(
+                user=request.user,
+                data=json.loads(fund_data)
+            )
+            messages.success(request, 'Fondo guardado exitosamente.')
         return redirect('my_funds')
     return redirect('sinking_fund')
 
@@ -273,3 +305,11 @@ def logout_view(request):
     logout(request)
     messages.success(request, 'Has cerrado sesión exitosamente.')
     return redirect('home')
+
+class DateEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, datetime):
+            return obj.strftime('%Y-%m-%d')
+        elif isinstance(obj, date):
+            return obj.strftime('%Y-%m-%d')
+        return super().default(obj)

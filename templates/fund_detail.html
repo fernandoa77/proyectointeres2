@@ -1,6 +1,44 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>Sinking Fund Details</h1>
-<!-- Display the fund data -->
-<pre>{{ fund.data|safe }}</pre>
+<div class="detail-container">
+    <h1>Detalles del Fondo de Amortización</h1>
+    
+    <div class="info-section">
+        <p><strong>Monto objetivo:</strong> ${{ fund.data.form_data.target_amount|floatformat:2 }}</p>
+        <p><strong>Tasa de interés:</strong> {{ fund.data.form_data.interest_rate }}%</p>
+        <p><strong>Plazo:</strong> {{ fund.data.form_data.term }} años</p>
+        <p><strong>Fecha del primer depósito:</strong> {{ fund.data.form_data.start_date }}</p>
+        <p><strong>Frecuencia de depósito:</strong> 
+            {% if fund.data.form_data.payment_frequency == 24 %}Quincenal
+            {% elif fund.data.form_data.payment_frequency == 12 %}Mensual
+            {% elif fund.data.form_data.payment_frequency == 2 %}Semestral
+            {% else %}Anual{% endif %}
+        </p>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Período</th>
+                    <th>Fecha de Depósito</th>
+                    <th>Depósito</th>
+                    <th>Interés</th>
+                    <th>Saldo Acumulado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in fund.data.schedule %}
+                <tr>
+                    <td>{{ entry.period }}</td>
+                    <td>{{ entry.payment_date }}</td>
+                    <td>${{ entry.deposit|floatformat:2 }}</td>
+                    <td>${{ entry.interest|floatformat:2 }}</td>
+                    <td>${{ entry.balance|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %}

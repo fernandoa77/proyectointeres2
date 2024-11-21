@@ -1,6 +1,46 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>Amortization Table Details</h1>
-<!-- Display the table data -->
-<pre>{{ table.data|safe }}</pre>
+<div class="detail-container">
+    <h1>Detalles de la Tabla de Amortización</h1>
+    
+    <div class="info-section">
+        <p><strong>Monto del préstamo:</strong> ${{ table.data.form_data.amount|floatformat:2 }}</p>
+        <p><strong>Tasa de interés:</strong> {{ table.data.form_data.interest_rate }}%</p>
+        <p><strong>Plazo:</strong> {{ table.data.form_data.term }} años</p>
+        <p><strong>Fecha de inicio:</strong> {{ table.data.form_data.start_date }}</p>
+        <p><strong>Frecuencia de pago:</strong> 
+            {% if table.data.form_data.payment_frequency == 24 %}Quincenal
+            {% elif table.data.form_data.payment_frequency == 12 %}Mensual
+            {% elif table.data.form_data.payment_frequency == 2 %}Semestral
+            {% else %}Anual{% endif %}
+        </p>
+    </div>
+
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Período</th>
+                    <th>Fecha de Pago</th>
+                    <th>Pago</th>
+                    <th>Interés</th>
+                    <th>Principal</th>
+                    <th>Saldo Restante</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in table.data.schedule %}
+                <tr>
+                    <td>{{ entry.month }}</td>
+                    <td>{{ entry.payment_date }}</td>
+                    <td>${{ entry.monthly_payment|floatformat:2 }}</td>
+                    <td>${{ entry.interest|floatformat:2 }}</td>
+                    <td>${{ entry.principal|floatformat:2 }}</td>
+                    <td>${{ entry.remaining_balance|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
 {% endblock %} 

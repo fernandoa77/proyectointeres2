@@ -227,4 +227,17 @@ a:hover {
     top: 0;
     background: linear-gradient(to left, rgba(0,0,0,0.1), transparent);
     pointer-events: none;
+}
+
+.actions-container {
+    margin: 20px 0;
+    text-align: right;
+}
+
+.actions-container form {
+    margin-left: 10px;
+}
+
+.actions-container button {
+    margin-left: 10px;
 } 

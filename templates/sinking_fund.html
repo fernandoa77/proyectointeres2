@@ -32,9 +32,6 @@
             {{ form.start_date }}
         </div>
         <button type="submit" name="calculate">Calcular</button>
-        {% if schedule %}
-            <button type="submit" name="download">Descargar en Excel</button>
-        {% endif %}
     </form>
 </div>
 
@@ -80,44 +77,51 @@
 </div>
 
 {% if schedule %}
-<div class="table-container">
-    <table>
-        <thead>
-            <tr>
-                <th>Período</th>
-                <th>Fecha de Depósito</th>
-                <th>Depósito {% if form.cleaned_data.payment_frequency == '24' %}Quincenal
-                    {% elif form.cleaned_data.payment_frequency == '12' %}Mensual
-                    {% elif form.cleaned_data.payment_frequency == '2' %}Semestral
-                    {% else %}Anual{% endif %}</th>
-                <th>Interés</th>
-                <th>Saldo Acumulado</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for entry in schedule %}
-            <tr>
-                <td>{{ entry.period }}</td>
-                <td>{{ entry.payment_date|date:"d/m/Y" }}</td>
-                <td>{{ entry.deposit|floatformat:2 }}</td>
-                <td>{{ entry.interest|floatformat:2 }}</td>
-                <td>{{ entry.balance|floatformat:2 }}</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
-</div>
-{% endif %}
-<script src="{% static 'js/rate_calculator.js' %}"></script>
+    <div class="actions-container" style="text-align: right;">
+        <form method="post" action="{% url 'save_fund' %}" style="display: inline;">
+            {% csrf_token %}
+            <input type="hidden" name="fund_data" value="{{ fund_data_json }}">
+            {% if user.is_authenticated %}
+                <button type="submit">Guardar Fondo</button>
+            {% endif %}
+        </form>
+        <form method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" name="download">Descargar en Excel</button>
+        </form>
+    </div>
 
-{% if user.is_authenticated %}
-    <form method="post" action="{% url 'save_fund' %}">
-        {% csrf_token %}
-        <!-- Include hidden fields to store necessary data -->
-        <input type="hidden" name="fund_data" value="{{ fund_data_json }}">
-        <button type="submit">Guardar Fondo</button>
-    </form>
-{% else %}
+    <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Período</th>
+                    <th>Fecha de Depósito</th>
+                    <th>Depósito {% if form.cleaned_data.payment_frequency == '24' %}Quincenal
+                        {% elif form.cleaned_data.payment_frequency == '12' %}Mensual
+                        {% elif form.cleaned_data.payment_frequency == '2' %}Semestral
+                        {% else %}Anual{% endif %}</th>
+                    <th>Interés</th>
+                    <th>Saldo Acumulado</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in schedule %}
+                <tr>
+                    <td>{{ entry.period }}</td>
+                    <td>{{ entry.payment_date|date:"d/m/Y" }}</td>
+                    <td>{{ entry.deposit|floatformat:2 }}</td>
+                    <td>{{ entry.interest|floatformat:2 }}</td>
+                    <td>{{ entry.balance|floatformat:2 }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endif %}
+
+{% if not user.is_authenticated and schedule %}
     <p><a href="{% url 'login' %}">Inicie sesión</a> para guardar este fondo.</p>
 {% endif %}
+<script src="{% static 'js/rate_calculator.js' %}"></script>
 {% endblock %} 
