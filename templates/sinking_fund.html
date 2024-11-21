@@ -1,4 +1,6 @@
 {% extends 'base.html' %}
+{% load static %}
+
 {% block title %}Fondo de Amortización{% endblock %}
 
 {% block content %}
@@ -6,12 +8,75 @@
     <h1>Fondo de Amortización</h1>
     <form method="post">
         {% csrf_token %}
-        {{ form.as_p }}
+        <div class="form-group">
+            {{ form.target_amount.label_tag }}
+            {{ form.target_amount }}
+        </div>
+        <div class="form-group">
+            {{ form.interest_rate.label_tag }}
+            {{ form.interest_rate }}
+            <a href="#" id="open-rate-calculator">
+                <i class="fas fa-calculator" style="margin-left: 5px;"></i>
+            </a>
+        </div>
+        <div class="form-group">
+            {{ form.term.label_tag }}
+            {{ form.term }}
+        </div>
+        <div class="form-group">
+            {{ form.payment_frequency.label_tag }}
+            {{ form.payment_frequency }}
+        </div>
+        <div class="form-group">
+            {{ form.start_date.label_tag }}
+            {{ form.start_date }}
+        </div>
         <button type="submit" name="calculate">Calcular</button>
         {% if schedule %}
             <button type="submit" name="download">Descargar en Excel</button>
         {% endif %}
     </form>
+</div>
+
+<!-- Modal para la Calculadora de Tasa -->
+<div id="rate-calculator-modal" class="modal">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <h2>Calculadora de Tasa de Interés Anual</h2>
+        <form id="rate-calculator-form">
+            <p>
+                <label for="rate-type">Tipo de Tasa:</label>
+                <select id="rate-type" name="rate_type">
+                    <option value="efectiva">Efectiva</option>
+                    <option value="nominal">Nominal</option>
+                </select>
+            </p>
+            <p>
+                <label for="periodicity">Periodicidad:</label>
+                <select id="periodicity" name="periodicity">
+                    <option value="12">Mensual</option>
+                    <option value="6">Bimestral</option>
+                    <option value="4">Trimestral</option>
+                    <option value="2">Semestral</option>
+                    <option value="1">Anual</option>
+                </select>
+            </p>
+            <p>
+                <label for="input-rate">Tasa (%):</label>
+                <input type="number" id="input-rate" name="input_rate" step="0.0001">
+            </p>
+            <p>
+                <button type="button" id="calculate-rate">Calcular</button>
+            </p>
+            <p>
+                <label for="calculated-rate">Tasa Anual Calculada (%):</label>
+                <input type="text" id="calculated-rate" name="calculated_rate" readonly>
+            </p>
+            <p>
+                <button type="button" id="accept-rate">Aceptar</button>
+            </p>
+        </form>
+    </div>
 </div>
 
 {% if schedule %}
@@ -43,4 +108,5 @@
     </table>
 </div>
 {% endif %}
+<script src="{% static 'js/rate_calculator.js' %}"></script>
 {% endblock %} 

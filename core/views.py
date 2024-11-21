@@ -1,11 +1,52 @@
 from django.shortcuts import render
 from django.http import HttpResponse
-from .models import Loan
 from .forms import AmortizationForm, SinkingFundForm
 import pandas as pd
 from datetime import datetime, timedelta
 from decimal import Decimal
 import calendar
+
+def generate_amortization_schedule(amount, interest_rate, term, payment_frequency, start_date):
+    schedule = []
+    rate_per_period = float(interest_rate) / (100 * payment_frequency)
+    n_periods = term * payment_frequency
+    
+    # Cálculo del pago periódico
+    payment = float(amount) * (rate_per_period * (1 + rate_per_period)**n_periods) / ((1 + rate_per_period)**n_periods - 1)
+    
+    remaining_balance = float(amount)
+    current_date = start_date
+
+    for period in range(1, int(n_periods) + 1):
+        interest_payment = remaining_balance * rate_per_period
+        principal_payment = payment - interest_payment
+        remaining_balance -= principal_payment
+        
+        schedule.append({
+            'month': period,
+            'payment_date': current_date,
+            'monthly_payment': payment,
+            'interest': interest_payment,
+            'principal': principal_payment,
+            'remaining_balance': remaining_balance if remaining_balance > 0 else 0
+        })
+        
+        # Actualizar la fecha según la frecuencia de pago
+        if payment_frequency == 24:  # Quincenal
+            current_date += timedelta(days=15)
+        elif payment_frequency == 12:  # Mensual
+            month_days = calendar.monthrange(current_date.year, current_date.month)[1]
+            current_date += timedelta(days=month_days)
+        elif payment_frequency == 2:  # Semestral
+            for _ in range(6):
+                month_days = calendar.monthrange(current_date.year, current_date.month)[1]
+                current_date += timedelta(days=month_days)
+        else:  # Anual
+            for _ in range(12):
+                month_days = calendar.monthrange(current_date.year, current_date.month)[1]
+                current_date += timedelta(days=month_days)
+    
+    return schedule
 
 def amortization_view(request):
     form = AmortizationForm()
@@ -20,15 +61,13 @@ def amortization_view(request):
             payment_frequency = int(form.cleaned_data['payment_frequency'])
             start_date = form.cleaned_data['start_date']
 
-            loan = Loan(
-                amount=amount,
-                interest_rate=interest_rate,
-                term=term,
-                payment_frequency=payment_frequency,
-                start_date=start_date
+            schedule = generate_amortization_schedule(
+                amount, 
+                interest_rate, 
+                term,
+                payment_frequency,
+                start_date
             )
-
-            schedule = loan.generate_amortization_schedule()
 
             if 'download' in request.POST:
                 df = pd.DataFrame(schedule)
