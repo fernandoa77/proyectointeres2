@@ -87,6 +87,11 @@
         </form>
         <form method="post" style="display: inline;">
             {% csrf_token %}
+            <input type="hidden" name="target_amount" value="{{ form.cleaned_data.target_amount }}">
+            <input type="hidden" name="interest_rate" value="{{ form.cleaned_data.interest_rate }}">
+            <input type="hidden" name="term" value="{{ form.cleaned_data.term }}">
+            <input type="hidden" name="payment_frequency" value="{{ form.cleaned_data.payment_frequency }}">
+            <input type="hidden" name="start_date" value="{{ form.cleaned_data.start_date|date:'Y-m-d' }}">
             <button type="submit" name="download">Descargar en Excel</button>
         </form>
     </div>

@@ -12,6 +12,8 @@ from django.contrib.auth.forms import UserCreationForm
 from django.contrib import messages
 import json
 from datetime import date
+from openpyxl import Workbook
+from openpyxl.utils import get_column_letter
 
 def generate_amortization_schedule(amount, interest_rate, term, payment_frequency, start_date):
     schedule = []
@@ -56,19 +58,17 @@ def generate_amortization_schedule(amount, interest_rate, term, payment_frequenc
     return schedule
 
 def amortization_view(request):
-    form = AmortizationForm()
-    schedule = None
-    table_data_json = None
-    
     if request.method == 'POST':
         form = AmortizationForm(request.POST)
         if form.is_valid():
+            # Obtener los datos del formulario
             amount = form.cleaned_data['amount']
             interest_rate = Decimal(str(form.cleaned_data['interest_rate']))
             term = form.cleaned_data['term']
             payment_frequency = int(form.cleaned_data['payment_frequency'])
             start_date = form.cleaned_data['start_date']
 
+            # Generar el schedule
             schedule = generate_amortization_schedule(
                 amount, 
                 interest_rate, 
@@ -76,50 +76,70 @@ def amortization_view(request):
                 payment_frequency,
                 start_date
             )
-            
-            # Crear el diccionario de datos completo
-            table_data = {
-                'form_data': {
-                    'amount': str(amount),
-                    'interest_rate': str(interest_rate),
-                    'term': term,
-                    'payment_frequency': payment_frequency,
-                    'start_date': start_date.strftime('%Y-%m-%d'),
-                },
-                'schedule': [
-                    {
-                        'month': entry['month'],
-                        'payment_date': entry['payment_date'].strftime('%Y-%m-%d'),
-                        'monthly_payment': float(entry['monthly_payment']),
-                        'interest': float(entry['interest']),
-                        'principal': float(entry['principal']),
-                        'remaining_balance': float(entry['remaining_balance'])
-                    }
-                    for entry in schedule
-                ]
-            }
-            table_data_json = json.dumps(table_data, cls=DateEncoder)
 
-    return render(request, 'amortization.html', {
-        'form': form,
-        'schedule': schedule,
-        'table_data_json': table_data_json
-    })
+            # Si se solicita la descarga
+            if 'download' in request.POST:
+                # Crear el DataFrame
+                df = pd.DataFrame([{
+                    'Período': entry['month'],
+                    'Fecha de Pago': entry['payment_date'].strftime('%d/%m/%Y'),
+                    'Pago': float(entry['monthly_payment']),
+                    'Interés': float(entry['interest']),
+                    'Principal': float(entry['principal']),
+                    'Saldo Restante': float(entry['remaining_balance'])
+                } for entry in schedule])
+
+                # Crear el archivo Excel en memoria
+                response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = 'attachment; filename=tabla_amortizacion.xlsx'
+
+                # Escribir el DataFrame al Excel
+                with pd.ExcelWriter(response, engine='openpyxl') as writer:
+                    df.to_excel(writer, index=False, sheet_name='Amortización')
+                    
+                    # Ajustar anchos de columna
+                    worksheet = writer.sheets['Amortización']
+                    for idx, col in enumerate(df.columns):
+                        max_length = max(
+                            df[col].astype(str).apply(len).max(),
+                            len(str(col))
+                        )
+                        worksheet.column_dimensions[get_column_letter(idx + 1)].width = max_length + 4
+
+                return response
+
+            # Si no es descarga, continuar con el renderizado normal
+            table_data_json = json.dumps({
+                'amount': str(amount),
+                'interest_rate': str(interest_rate),
+                'term': term,
+                'payment_frequency': payment_frequency,
+                'schedule': schedule
+            })
+
+            return render(request, 'amortization.html', {
+                'form': form,
+                'schedule': schedule,
+                'table_data_json': table_data_json
+            })
+
+    else:
+        form = AmortizationForm()
+
+    return render(request, 'amortization.html', {'form': form})
 
 def sinking_fund_view(request):
-    form = SinkingFundForm()
-    schedule = None
-    fund_data_json = None
-    
     if request.method == 'POST':
         form = SinkingFundForm(request.POST)
         if form.is_valid():
+            # Obtener los datos del formulario
             target_amount = form.cleaned_data['target_amount']
             interest_rate = Decimal(str(form.cleaned_data['interest_rate']))
             term = form.cleaned_data['term']
             payment_frequency = int(form.cleaned_data['payment_frequency'])
             start_date = form.cleaned_data['start_date']
 
+            # Generar el schedule
             schedule = generate_sinking_fund_schedule(
                 target_amount, 
                 interest_rate, 
@@ -127,8 +147,38 @@ def sinking_fund_view(request):
                 payment_frequency,
                 start_date
             )
-            
-            # Crear el diccionario de datos completo
+
+            # Si se solicita la descarga
+            if 'download' in request.POST:
+                # Crear el DataFrame
+                df = pd.DataFrame([{
+                    'Período': entry['period'],
+                    'Fecha de Depósito': entry['payment_date'].strftime('%d/%m/%Y'),
+                    'Depósito': float(entry['deposit']),
+                    'Interés': float(entry['interest']),
+                    'Saldo Acumulado': float(entry['balance'])
+                } for entry in schedule])
+
+                # Crear el archivo Excel en memoria
+                response = HttpResponse(content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+                response['Content-Disposition'] = 'attachment; filename=fondo_amortizacion.xlsx'
+
+                # Escribir el DataFrame al Excel
+                with pd.ExcelWriter(response, engine='openpyxl') as writer:
+                    df.to_excel(writer, index=False, sheet_name='Fondo de Amortización')
+                    
+                    # Ajustar anchos de columna
+                    worksheet = writer.sheets['Fondo de Amortización']
+                    for idx, col in enumerate(df.columns):
+                        max_length = max(
+                            df[col].astype(str).apply(len).max(),
+                            len(str(col))
+                        )
+                        worksheet.column_dimensions[get_column_letter(idx + 1)].width = max_length + 4
+
+                return response
+
+            # Si no es descarga, continuar con el renderizado normal
             fund_data = {
                 'form_data': {
                     'target_amount': str(target_amount),
@@ -137,24 +187,20 @@ def sinking_fund_view(request):
                     'payment_frequency': payment_frequency,
                     'start_date': start_date.strftime('%Y-%m-%d'),
                 },
-                'schedule': [
-                    {
-                        'period': entry['period'],
-                        'payment_date': entry['payment_date'].strftime('%Y-%m-%d'),
-                        'deposit': float(entry['deposit']),
-                        'interest': float(entry['interest']),
-                        'balance': float(entry['balance'])
-                    }
-                    for entry in schedule
-                ]
+                'schedule': schedule
             }
             fund_data_json = json.dumps(fund_data, cls=DateEncoder)
 
-    return render(request, 'sinking_fund.html', {
-        'form': form,
-        'schedule': schedule,
-        'fund_data_json': fund_data_json
-    })
+            return render(request, 'sinking_fund.html', {
+                'form': form,
+                'schedule': schedule,
+                'fund_data_json': fund_data_json
+            })
+
+    else:
+        form = SinkingFundForm()
+
+    return render(request, 'sinking_fund.html', {'form': form})
 
 def generate_sinking_fund_schedule(target_amount, interest_rate, term, payment_frequency, start_date):
     # Convertir todos los valores a Decimal
