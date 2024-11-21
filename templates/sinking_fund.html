@@ -20,6 +20,7 @@
         <thead>
             <tr>
                 <th>Período</th>
+                <th>Fecha de Depósito</th>
                 <th>Depósito</th>
                 <th>Interés</th>
                 <th>Saldo Acumulado</th>
@@ -29,6 +30,7 @@
             {% for entry in schedule %}
             <tr>
                 <td>{{ entry.period }}</td>
+                <td>{{ entry.payment_date|date:"d/m/Y" }}</td>
                 <td>{{ entry.deposit|floatformat:2 }}</td>
                 <td>{{ entry.interest|floatformat:2 }}</td>
                 <td>{{ entry.balance|floatformat:2 }}</td>

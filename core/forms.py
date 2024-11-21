@@ -9,4 +9,5 @@ class AmortizationForm(forms.Form):
 class SinkingFundForm(forms.Form):
     target_amount = forms.DecimalField(label='Monto objetivo', max_digits=12, decimal_places=2)
     interest_rate = forms.FloatField(label='Tasa de interés anual (%)')
-    term = forms.IntegerField(label='Plazo en años') 
+    term = forms.IntegerField(label='Plazo en años')
+    start_date = forms.DateField(label='Fecha del primer depósito', widget=forms.DateInput(attrs={'type': 'date'})) 
