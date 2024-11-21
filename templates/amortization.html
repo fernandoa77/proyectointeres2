@@ -2,11 +2,44 @@
 {% block title %}Tabla de Amortización{% endblock %}
 
 {% block content %}
-<h1>Tabla de Amortización</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" name="calculate">Calcular</button>
-    <button type="submit" name="download">Descargar en Excel</button>
-</form>
+<div class="form-container">
+    <h1>Tabla de Amortización</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" name="calculate">Calcular</button>
+        {% if schedule %}
+            <button type="submit" name="download">Descargar en Excel</button>
+        {% endif %}
+    </form>
+</div>
+
+{% if schedule %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Mes</th>
+                <th>Fecha de Pago</th>
+                <th>Pago Mensual</th>
+                <th>Interés</th>
+                <th>Principal</th>
+                <th>Saldo Restante</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in schedule %}
+            <tr>
+                <td>{{ entry.month }}</td>
+                <td>{{ entry.payment_date }}</td>
+                <td>{{ entry.monthly_payment|floatformat:2 }}</td>
+                <td>{{ entry.interest|floatformat:2 }}</td>
+                <td>{{ entry.principal|floatformat:2 }}</td>
+                <td>{{ entry.remaining_balance|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
 {% endblock %} 

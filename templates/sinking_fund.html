@@ -2,11 +2,40 @@
 {% block title %}Fondo de Amortización{% endblock %}
 
 {% block content %}
-<h1>Fondo de Amortización</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit" name="calculate">Calcular</button>
-    <button type="submit" name="download">Descargar en Excel</button>
-</form>
+<div class="form-container">
+    <h1>Fondo de Amortización</h1>
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" name="calculate">Calcular</button>
+        {% if schedule %}
+            <button type="submit" name="download">Descargar en Excel</button>
+        {% endif %}
+    </form>
+</div>
+
+{% if schedule %}
+<div class="table-container">
+    <table>
+        <thead>
+            <tr>
+                <th>Período</th>
+                <th>Depósito</th>
+                <th>Interés</th>
+                <th>Saldo Acumulado</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for entry in schedule %}
+            <tr>
+                <td>{{ entry.period }}</td>
+                <td>{{ entry.deposit|floatformat:2 }}</td>
+                <td>{{ entry.interest|floatformat:2 }}</td>
+                <td>{{ entry.balance|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endif %}
 {% endblock %} 
