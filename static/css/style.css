@@ -39,22 +39,80 @@ form {
 
 table {
     width: 100%;
-    border-collapse: collapse;
-    margin-top: 15px;
+    min-width: 800px;
+    border-collapse: separate;
+    border-spacing: 0;
+    margin: 0;
 }
 
-table, th, td {
-    border: 1px solid #bdc3c7;
-}
-
-th, td {
-    padding: 8px;
-    text-align: right;
+thead {
+    position: sticky;
+    top: 0;
+    z-index: 2;
 }
 
 th {
     background-color: #ecf0f1;
     color: #2c3e50;
+    padding: 12px 8px;
+    font-weight: bold;
+    text-align: center;
+    border-bottom: 2px solid #bdc3c7;
+    position: sticky;
+    top: 0;
+    z-index: 2;
+}
+
+td {
+    padding: 10px 8px;
+    text-align: right;
+    border-bottom: 1px solid #eee;
+    background-color: #fff;
+}
+
+.table-container {
+    max-width: 100%;
+    overflow-x: auto;
+    margin-top: 20px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    max-height: 500px;
+    overflow-y: auto;
+    position: relative;
+}
+
+.table-container::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.table-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.table-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+td:first-child {
+    position: sticky;
+    left: 0;
+    background-color: #fff;
+    z-index: 1;
+    border-right: 1px solid #eee;
+}
+
+th:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 3;
+    background-color: #ecf0f1;
 }
 
 a {
@@ -120,4 +178,53 @@ a:hover {
 
 #rate-calculator-form button {
     margin-left: 160px;
+}
+
+@media screen and (max-width: 768px) {
+    .form-container {
+        padding: 10px;
+    }
+    
+    .modal-content {
+        width: 90%;
+        padding: 15px;
+    }
+    
+    #rate-calculator-form label {
+        width: 100%;
+        text-align: left;
+        margin-bottom: 5px;
+    }
+    
+    #rate-calculator-form input,
+    #rate-calculator-form select {
+        width: 100%;
+    }
+    
+    #rate-calculator-form button {
+        margin-left: 0;
+        width: 100%;
+    }
+}
+
+.table-container::after {
+    content: '';
+    position: sticky;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    bottom: 0;
+    background: linear-gradient(to top, rgba(0,0,0,0.1), transparent);
+    pointer-events: none;
+}
+
+.table-container::before {
+    content: '';
+    position: sticky;
+    right: 0;
+    width: 2px;
+    height: 100%;
+    top: 0;
+    background: linear-gradient(to left, rgba(0,0,0,0.1), transparent);
+    pointer-events: none;
 } 
