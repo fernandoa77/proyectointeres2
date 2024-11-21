@@ -313,3 +313,9 @@ class DateEncoder(json.JSONEncoder):
         elif isinstance(obj, date):
             return obj.strftime('%Y-%m-%d')
         return super().default(obj)
+
+def recursos_educativos(request):
+    return render(request, 'recursos_educativos.html')
+
+def acerca_de(request):
+    return render(request, 'acerca_de.html')
