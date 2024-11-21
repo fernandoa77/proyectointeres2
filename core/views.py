@@ -9,7 +9,7 @@ import calendar
 
 def amortization_view(request):
     form = AmortizationForm()
-    schedule = None  # Inicializamos schedule como None
+    schedule = None
     
     if request.method == 'POST':
         form = AmortizationForm(request.POST)
@@ -17,12 +17,14 @@ def amortization_view(request):
             amount = form.cleaned_data['amount']
             interest_rate = Decimal(str(form.cleaned_data['interest_rate']))
             term = form.cleaned_data['term']
+            payment_frequency = int(form.cleaned_data['payment_frequency'])
             start_date = form.cleaned_data['start_date']
 
             loan = Loan(
                 amount=amount,
                 interest_rate=interest_rate,
                 term=term,
+                payment_frequency=payment_frequency,
                 start_date=start_date
             )
 
@@ -31,9 +33,9 @@ def amortization_view(request):
             if 'download' in request.POST:
                 df = pd.DataFrame(schedule)
                 df.columns = [
-                    'Mes',
+                    'Período',
                     'Fecha de Pago',
-                    'Pago Mensual',
+                    f'Pago {"Quincenal" if payment_frequency == 24 else "Mensual" if payment_frequency == 12 else "Semestral" if payment_frequency == 2 else "Anual"}',
                     'Interés',
                     'Principal',
                     'Saldo Restante'
@@ -58,12 +60,14 @@ def sinking_fund_view(request):
             target_amount = form.cleaned_data['target_amount']
             interest_rate = Decimal(str(form.cleaned_data['interest_rate']))
             term = form.cleaned_data['term']
+            payment_frequency = int(form.cleaned_data['payment_frequency'])
             start_date = form.cleaned_data['start_date']
 
             schedule = generate_sinking_fund_schedule(
                 target_amount, 
                 interest_rate, 
                 term,
+                payment_frequency,
                 start_date
             )
 
@@ -72,7 +76,7 @@ def sinking_fund_view(request):
                 df.columns = [
                     'Período',
                     'Fecha de Depósito',
-                    'Depósito',
+                    f'Depósito {"Quincenal" if payment_frequency == 24 else "Mensual" if payment_frequency == 12 else "Semestral" if payment_frequency == 2 else "Anual"}',
                     'Interés',
                     'Saldo Acumulado'
                 ]
@@ -86,15 +90,15 @@ def sinking_fund_view(request):
         'schedule': schedule
     })
 
-def generate_sinking_fund_schedule(target_amount, interest_rate, term, start_date):
+def generate_sinking_fund_schedule(target_amount, interest_rate, term, payment_frequency, start_date):
     # Convertir todos los valores a Decimal
     target_amount = Decimal(str(target_amount))
     interest_rate = Decimal(str(interest_rate))
     term = Decimal(str(term))
     
     # Cálculo del depósito periódico
-    rate_per_period = interest_rate / Decimal('12') / Decimal('100')
-    n_periods = term * Decimal('12')
+    rate_per_period = interest_rate / Decimal(str(payment_frequency)) / Decimal('100')
+    n_periods = term * Decimal(str(payment_frequency))
     
     # Cálculo del denominador
     denominator = ((Decimal('1') + rate_per_period) ** n_periods - Decimal('1')) / rate_per_period
@@ -116,8 +120,19 @@ def generate_sinking_fund_schedule(target_amount, interest_rate, term, start_dat
             'balance': balance,
         })
         
-        # Incrementar la fecha al siguiente mes
-        month_days = calendar.monthrange(current_date.year, current_date.month)[1]
-        current_date += timedelta(days=month_days)
+        # Incrementar la fecha según la frecuencia
+        if payment_frequency == 24:  # Quincenal
+            current_date += timedelta(days=15)
+        elif payment_frequency == 12:  # Mensual
+            month_days = calendar.monthrange(current_date.year, current_date.month)[1]
+            current_date += timedelta(days=month_days)
+        elif payment_frequency == 2:  # Semestral
+            for _ in range(6):
+                month_days = calendar.monthrange(current_date.year, current_date.month)[1]
+                current_date += timedelta(days=month_days)
+        else:  # Anual
+            for _ in range(12):
+                month_days = calendar.monthrange(current_date.year, current_date.month)[1]
+                current_date += timedelta(days=month_days)
 
     return schedule

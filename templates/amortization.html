@@ -19,9 +19,12 @@
     <table>
         <thead>
             <tr>
-                <th>Mes</th>
+                <th>Período</th>
                 <th>Fecha de Pago</th>
-                <th>Pago Mensual</th>
+                <th>Pago {% if form.cleaned_data.payment_frequency == '24' %}Quincenal
+                    {% elif form.cleaned_data.payment_frequency == '12' %}Mensual
+                    {% elif form.cleaned_data.payment_frequency == '2' %}Semestral
+                    {% else %}Anual{% endif %}</th>
                 <th>Interés</th>
                 <th>Principal</th>
                 <th>Saldo Restante</th>
@@ -31,7 +34,7 @@
             {% for entry in schedule %}
             <tr>
                 <td>{{ entry.month }}</td>
-                <td>{{ entry.payment_date }}</td>
+                <td>{{ entry.payment_date|date:"d/m/Y" }}</td>
                 <td>{{ entry.monthly_payment|floatformat:2 }}</td>
                 <td>{{ entry.interest|floatformat:2 }}</td>
                 <td>{{ entry.principal|floatformat:2 }}</td>

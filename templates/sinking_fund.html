@@ -21,7 +21,10 @@
             <tr>
                 <th>Período</th>
                 <th>Fecha de Depósito</th>
-                <th>Depósito</th>
+                <th>Depósito {% if form.cleaned_data.payment_frequency == '24' %}Quincenal
+                    {% elif form.cleaned_data.payment_frequency == '12' %}Mensual
+                    {% elif form.cleaned_data.payment_frequency == '2' %}Semestral
+                    {% else %}Anual{% endif %}</th>
                 <th>Interés</th>
                 <th>Saldo Acumulado</th>
             </tr>
