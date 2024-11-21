@@ -1,0 +1,1 @@
+web: gunicorn AMORT.wsgi:application
