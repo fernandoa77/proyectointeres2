@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>My Sinking Funds</h1>
+<h1>Mis Fondos de Amortización</h1>
 <ul>
     {% for fund in funds %}
         <li>
-            <a href="{% url 'fund_detail' fund.id %}">Fund {{ fund.id }} - {{ fund.created_at }}</a>
+            <a href="{% url 'fund_detail' fund.id %}">Fondo {{ fund.id }} - {{ fund.created_at }}</a>
         </li>
     {% empty %}
-        <li>No funds saved.</li>
+        <li>No hay fondos guardados.</li>
     {% endfor %}
 </ul>
 {% endblock %}

@@ -1,13 +1,13 @@
 {% extends 'base.html' %}
 {% block content %}
-<h1>My Amortization Tables</h1>
+<h1>Mis Tablas de Amortización</h1>
 <ul>
     {% for table in tables %}
         <li>
-            <a href="{% url 'table_detail' table.id %}">Table {{ table.id }} - {{ table.created_at }}</a>
+            <a href="{% url 'table_detail' table.id %}">Tabla {{ table.id }} - {{ table.created_at }}</a>
         </li>
     {% empty %}
-        <li>No tables saved.</li>
+        <li>No hay tablas guardadas.</li>
     {% endfor %}
 </ul>
 {% endblock %}

@@ -118,9 +118,9 @@
         {% csrf_token %}
         <!-- Include hidden fields to store necessary data -->
         <input type="hidden" name="table_data" value="{{ table_data_json }}">
-        <button type="submit">Save Table</button>
+        <button type="submit">Guardar Tabla</button>
     </form>
 {% else %}
-    <p><a href="{% url 'login' %}">Login</a> to save this table.</p>
+    <p><a href="{% url 'login' %}">Inicie sesión</a> para guardar esta tabla.</p>
 {% endif %}
 {% endblock %} 
