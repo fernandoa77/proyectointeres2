@@ -112,4 +112,15 @@
 {% endif %}
 
 <script src="{% static 'js/rate_calculator.js' %}"></script>
+
+{% if user.is_authenticated %}
+    <form method="post" action="{% url 'save_amortization' %}">
+        {% csrf_token %}
+        <!-- Include hidden fields to store necessary data -->
+        <input type="hidden" name="table_data" value="{{ table_data_json }}">
+        <button type="submit">Save Table</button>
+    </form>
+{% else %}
+    <p><a href="{% url 'login' %}">Login</a> to save this table.</p>
+{% endif %}
 {% endblock %} 

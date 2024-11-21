@@ -1,10 +1,14 @@
-from django.shortcuts import render
-from django.http import HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, JsonResponse
 from .forms import AmortizationForm, SinkingFundForm
 import pandas as pd
 from datetime import datetime, timedelta
 from decimal import Decimal
 import calendar
+from django.contrib.auth.decorators import login_required
+from .models import AmortizationTable, SinkingFund
+from django.contrib.auth import login
+from django.contrib.auth.forms import UserCreationForm
 
 def generate_amortization_schedule(amount, interest_rate, term, payment_frequency, start_date):
     schedule = []
@@ -175,3 +179,71 @@ def generate_sinking_fund_schedule(target_amount, interest_rate, term, payment_f
                 current_date += timedelta(days=month_days)
 
     return schedule
+
+@login_required
+def my_tables(request):
+    tables = AmortizationTable.objects.filter(user=request.user)
+    return render(request, 'my_tables.html', {'tables': tables})
+
+@login_required
+def my_funds(request):
+    funds = SinkingFund.objects.filter(user=request.user)
+    return render(request, 'my_funds.html', {'funds': funds})
+
+@login_required
+def save_amortization(request):
+    if request.method == 'POST':
+        data = request.POST.get('table_data')
+        AmortizationTable.objects.create(user=request.user, data=data)
+        return redirect('my_tables')
+    return redirect('amortization')
+
+@login_required
+def save_fund(request):
+    if request.method == 'POST':
+        data = request.POST.get('fund_data')
+        SinkingFund.objects.create(user=request.user, data=data)
+        return redirect('my_funds')
+    return redirect('sinking_fund')
+
+@login_required
+def table_detail(request, id):
+    table = get_object_or_404(AmortizationTable, id=id, user=request.user)
+    return render(request, 'table_detail.html', {'table': table})
+
+@login_required
+def fund_detail(request, id):
+    fund = get_object_or_404(SinkingFund, id=id, user=request.user)
+    return render(request, 'fund_detail.html', {'fund': fund})
+
+def signup(request):
+    if request.method == 'POST':
+        form = UserCreationForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = UserCreationForm()
+    return render(request, 'registration/signup.html', {'form': form})
+
+def home(request):
+    """
+    Vista para la página principal que muestra las opciones disponibles
+    y un mensaje de bienvenida personalizado si el usuario está autenticado.
+    """
+    context = {
+        'title': 'Bienvenido a AMORT',
+        'description': 'Sistema de cálculo de tablas de amortización y fondos de amortización'
+    }
+    
+    if request.user.is_authenticated:
+        # Si el usuario está autenticado, agregar información personalizada
+        tables_count = AmortizationTable.objects.filter(user=request.user).count()
+        funds_count = SinkingFund.objects.filter(user=request.user).count()
+        context.update({
+            'tables_count': tables_count,
+            'funds_count': funds_count
+        })
+    
+    return render(request, 'home.html', context)

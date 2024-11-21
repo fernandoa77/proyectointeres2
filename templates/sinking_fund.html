@@ -109,4 +109,15 @@
 </div>
 {% endif %}
 <script src="{% static 'js/rate_calculator.js' %}"></script>
+
+{% if user.is_authenticated %}
+    <form method="post" action="{% url 'save_fund' %}">
+        {% csrf_token %}
+        <!-- Include hidden fields to store necessary data -->
+        <input type="hidden" name="fund_data" value="{{ fund_data_json }}">
+        <button type="submit">Save Fund</button>
+    </form>
+{% else %}
+    <p><a href="{% url 'login' %}">Login</a> to save this fund.</p>
+{% endif %}
 {% endblock %} 

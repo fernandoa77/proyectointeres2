@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>My Amortization Tables</h1>
+<ul>
+    {% for table in tables %}
+        <li>
+            <a href="{% url 'table_detail' table.id %}">Table {{ table.id }} - {{ table.created_at }}</a>
+        </li>
+    {% empty %}
+        <li>No tables saved.</li>
+    {% endfor %}
+</ul>
+{% endblock %}
