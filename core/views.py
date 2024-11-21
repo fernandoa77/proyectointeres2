@@ -116,7 +116,15 @@ def amortization_view(request):
                 'interest_rate': str(interest_rate),
                 'term': term,
                 'payment_frequency': payment_frequency,
-                'schedule': schedule
+                'start_date': start_date.strftime('%Y-%m-%d'),
+                'schedule': [{
+                    'month': entry['month'],
+                    'payment_date': entry['payment_date'].strftime('%Y-%m-%d'),
+                    'monthly_payment': float(entry['monthly_payment']),
+                    'interest': float(entry['interest']),
+                    'principal': float(entry['principal']),
+                    'remaining_balance': float(entry['remaining_balance'])
+                } for entry in schedule]
             })
 
             return render(request, 'amortization.html', {
@@ -189,9 +197,15 @@ def sinking_fund_view(request):
                     'payment_frequency': payment_frequency,
                     'start_date': start_date.strftime('%Y-%m-%d'),
                 },
-                'schedule': schedule
+                'schedule': [{
+                    'period': entry['period'],
+                    'payment_date': entry['payment_date'].strftime('%Y-%m-%d'),
+                    'deposit': float(entry['deposit']),
+                    'interest': float(entry['interest']),
+                    'balance': float(entry['balance'])
+                } for entry in schedule]
             }
-            fund_data_json = json.dumps(fund_data, cls=DateEncoder)
+            fund_data_json = json.dumps(fund_data)
 
             return render(request, 'sinking_fund.html', {
                 'form': form,
