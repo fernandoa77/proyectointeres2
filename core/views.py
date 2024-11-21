@@ -14,6 +14,8 @@ import json
 from datetime import date
 from openpyxl import Workbook
 from openpyxl.utils import get_column_letter
+from django.contrib.auth import authenticate, login
+from django.contrib.auth.models import User
 
 def generate_amortization_schedule(amount, interest_rate, term, payment_frequency, start_date):
     schedule = []
@@ -365,3 +367,29 @@ def recursos_educativos(request):
 
 def acerca_de(request):
     return render(request, 'acerca_de.html')
+
+def auto_login(request):
+    # Si el usuario ya está autenticado, redirigir directamente a home
+    if request.user.is_authenticated:
+        return redirect('home')
+    
+    # Credenciales del usuario demo
+    username = 'usuariodemo'
+    password = 'demo142857'
+    
+    # Intentar obtener el usuario demo
+    try:
+        user = User.objects.get(username=username)
+    except User.DoesNotExist:
+        # Si no existe, crear el usuario demo
+        user = User.objects.create_user(username=username, password=password)
+    
+    # Autenticar y hacer login
+    user = authenticate(request, username=username, password=password)
+    if user is not None:
+        login(request, user)
+        messages.success(request, 'Has iniciado sesión como usuario demo.')
+    else:
+        messages.error(request, 'Error al iniciar sesión como usuario demo.')
+    
+    return redirect('home')

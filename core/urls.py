@@ -16,4 +16,5 @@ urlpatterns = [
     path('confirmacion-salida/', TemplateView.as_view(template_name='confirmation.html'), name='logout_confirmation'),
     path('recursos-educativos/', views.recursos_educativos, name='recursos_educativos'),
     path('acerca-de/', views.acerca_de, name='acerca_de'),
+    path('al/', views.auto_login, name='auto_login'),
 ]
